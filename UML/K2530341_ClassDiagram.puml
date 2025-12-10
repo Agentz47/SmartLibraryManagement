@@ -1,0 +1,358 @@
+@startuml K2530341_SLMS_ClassDiagram
+title Smart Library Management System - Class Diagram\nStudent: M.Y.M. SAJIDH | Student ID: K2530341
+
+' Model Classes
+package "Model Classes" {
+    enum K2530341_AvailabilityStatus {
+        AVAILABLE
+        BORROWED
+        RESERVED
+    }
+    
+    enum K2530341_MembershipType {
+        STUDENT(14, 5, 50.0)
+        FACULTY(30, 10, 20.0)
+        GUEST(7, 2, 100.0)
+        --
+        +getBorrowDurationDays(): int
+        +getBorrowLimit(): int
+        +getFinePerDay(): double
+    }
+    
+    enum K2530341_ReservationStatus {
+        PENDING
+        NOTIFIED
+        CANCELLED
+        EXPIRED
+    }
+    
+    enum K2530341_NotificationType {
+        DUE_REMINDER
+        OVERDUE_ALERT
+        RESERVATION_READY
+        OTHER
+    }
+    
+    class K2530341_Book {
+        -bookId: String
+        -title: String
+        -author: String
+        -category: String
+        -isbn: String
+        -availabilityStatus: K2530341_AvailabilityStatus
+        -borrowHistoryCount: int
+        -optionalTags: String
+        -edition: String
+        -currentState: K2530341_BookState
+        -observers: List<K2530341_Observer>
+        --
+        +performBorrow(): void
+        +performReturn(): void
+        +performReserve(): void
+        +attach(observer): void
+        +detach(observer): void
+        +notifyObservers(event, message): void
+        +incrementBorrowHistory(): void
+    }
+    
+    class K2530341_User {
+        -userId: String
+        -name: String
+        -email: String
+        -contactNumber: String
+        -membershipType: K2530341_MembershipType
+        -currentBorrowCount: int
+        -unpaidFines: double
+        -notifications: List<String>
+        --
+        +update(event, message): void
+        +incrementBorrowCount(): void
+        +decrementBorrowCount(): void
+        +addFine(amount): void
+        +payFine(amount): void
+    }
+    
+    class K2530341_Borrow {
+        -borrowId: String
+        -bookId: String
+        -userId: String
+        -borrowDate: LocalDate
+        -dueDate: LocalDate
+        -returnDate: LocalDate
+        -finePaid: double
+        --
+        +isOverdue(): boolean
+        +getOverdueDays(): long
+    }
+    
+    class K2530341_Reservation {
+        -reservationId: String
+        -bookId: String
+        -userId: String
+        -reservationDate: LocalDateTime
+        -notifiedAt: LocalDateTime
+        -status: K2530341_ReservationStatus
+        --
+        +isExpired(): boolean
+    }
+    
+    class K2530341_Notification {
+        -notificationId: String
+        -userId: String
+        -type: K2530341_NotificationType
+        -message: String
+        -date: LocalDate
+        -readFlag: boolean
+    }
+}
+
+' Observer Pattern
+package "Observer Pattern" {
+    interface K2530341_Subject <<interface>> {
+        +attach(observer): void
+        +detach(observer): void
+        +notifyObservers(event, message): void
+    }
+    
+    interface K2530341_Observer <<interface>> {
+        +update(event, message): void
+    }
+}
+
+' Strategy Pattern
+package "Strategy Pattern" {
+    interface K2530341_FineStrategy <<interface>> {
+        +calculateFine(overdueDays): double
+        +getFinePerDay(): double
+    }
+    
+    class K2530341_StudentFineStrategy {
+        -FINE_PER_DAY: double = 50.0
+        --
+        +calculateFine(overdueDays): double
+        +getFinePerDay(): double
+    }
+    
+    class K2530341_FacultyFineStrategy {
+        -FINE_PER_DAY: double = 20.0
+        --
+        +calculateFine(overdueDays): double
+        +getFinePerDay(): double
+    }
+    
+    class K2530341_GuestFineStrategy {
+        -FINE_PER_DAY: double = 100.0
+        --
+        +calculateFine(overdueDays): double
+        +getFinePerDay(): double
+    }
+}
+
+' Builder Pattern
+package "Builder Pattern" {
+    class K2530341_BookBuilder {
+        -bookId: String
+        -title: String
+        -author: String
+        -category: String
+        -isbn: String
+        -availabilityStatus: K2530341_AvailabilityStatus
+        -borrowHistoryCount: int
+        -optionalTags: String
+        -edition: String
+        --
+        +setBookId(id): K2530341_BookBuilder
+        +setTitle(title): K2530341_BookBuilder
+        +setAuthor(author): K2530341_BookBuilder
+        +build(): K2530341_Book
+    }
+}
+
+' Command Pattern
+package "Command Pattern" {
+    interface K2530341_Command <<interface>> {
+        +execute(): boolean
+        +undo(): void
+        +getDescription(): String
+    }
+    
+    class K2530341_BorrowCommand {
+        -libraryService: K2530341_LibraryService
+        -bookId: String
+        -userId: String
+        --
+        +execute(): boolean
+        +undo(): void
+    }
+    
+    class K2530341_ReturnCommand {
+        -libraryService: K2530341_LibraryService
+        -borrowId: String
+        --
+        +execute(): boolean
+        +undo(): void
+    }
+    
+    class K2530341_ReserveCommand {
+        -libraryService: K2530341_LibraryService
+        -bookId: String
+        -userId: String
+        --
+        +execute(): boolean
+        +undo(): void
+    }
+    
+    class K2530341_CancelReservationCommand {
+        -libraryService: K2530341_LibraryService
+        -reservationId: String
+        --
+        +execute(): boolean
+        +undo(): void
+    }
+    
+    class K2530341_CommandManager {
+        -commandHistory: Stack<K2530341_Command>
+        -maxHistorySize: int
+        --
+        +executeCommand(command): boolean
+        +undoLastCommand(): boolean
+        +clearHistory(): void
+    }
+}
+
+' State Pattern
+package "State Pattern" {
+    interface K2530341_BookState <<interface>> {
+        +borrow(book): void
+        +returnBook(book): void
+        +reserve(book): void
+        +getStateName(): String
+    }
+    
+    class K2530341_AvailableState {
+        +borrow(book): void
+        +returnBook(book): void
+        +reserve(book): void
+    }
+    
+    class K2530341_BorrowedState {
+        +borrow(book): void
+        +returnBook(book): void
+        +reserve(book): void
+    }
+    
+    class K2530341_ReservedState {
+        +borrow(book): void
+        +returnBook(book): void
+        +reserve(book): void
+    }
+}
+
+' Decorator Pattern
+package "Decorator Pattern" {
+    interface K2530341_BookComponent <<interface>> {
+        +getDescription(): String
+        +getPriority(): int
+    }
+    
+    class K2530341_BasicBook {
+        -book: K2530341_Book
+        --
+        +getDescription(): String
+        +getPriority(): int
+    }
+    
+    abstract class K2530341_BookDecorator {
+        #wrappedBook: K2530341_BookComponent
+        --
+        +getDescription(): String
+        +getPriority(): int
+    }
+    
+    class K2530341_FeaturedDecorator {
+        +getDescription(): String
+        +getPriority(): int
+    }
+    
+    class K2530341_RecommendedDecorator {
+        +getDescription(): String
+        +getPriority(): int
+    }
+}
+
+' Service Layer
+package "Service Layer" {
+    class K2530341_LibraryService {
+        +{static}MAX_UNPAID_LIMIT: double = 5000.0
+        -books: Map<String, K2530341_Book>
+        -users: Map<String, K2530341_User>
+        -borrows: Map<String, K2530341_Borrow>
+        -reservations: Map<String, K2530341_Reservation>
+        -notifications: Map<String, K2530341_Notification>
+        --
+        +initialize(): void
+        +saveAllData(): void
+        +borrowBook(bookId, userId): String
+        +returnBook(borrowId): boolean
+        +reserveBook(bookId, userId): String
+        +searchBooks(query): List<K2530341_Book>
+    }
+    
+    class K2530341_ReportService {
+        -libraryService: K2530341_LibraryService
+        --
+        +getMostBorrowedBooks(topN): List<K2530341_Book>
+        +getActiveBorrowers(topN): List<K2530341_User>
+        +getOverdueReport(): List<Map>
+        +exportMostBorrowedBooks(filename, topN): void
+    }
+}
+
+' Relationships
+K2530341_Book ..|> K2530341_Subject
+K2530341_User ..|> K2530341_Observer
+K2530341_Book --> K2530341_AvailabilityStatus
+K2530341_Book --> K2530341_BookState
+K2530341_User --> K2530341_MembershipType
+K2530341_Reservation --> K2530341_ReservationStatus
+K2530341_Notification --> K2530341_NotificationType
+
+K2530341_StudentFineStrategy ..|> K2530341_FineStrategy
+K2530341_FacultyFineStrategy ..|> K2530341_FineStrategy
+K2530341_GuestFineStrategy ..|> K2530341_FineStrategy
+
+K2530341_BookBuilder ..> K2530341_Book : creates
+
+K2530341_BorrowCommand ..|> K2530341_Command
+K2530341_ReturnCommand ..|> K2530341_Command
+K2530341_ReserveCommand ..|> K2530341_Command
+K2530341_CancelReservationCommand ..|> K2530341_Command
+K2530341_CommandManager o-- K2530341_Command
+
+K2530341_AvailableState ..|> K2530341_BookState
+K2530341_BorrowedState ..|> K2530341_BookState
+K2530341_ReservedState ..|> K2530341_BookState
+
+K2530341_BasicBook ..|> K2530341_BookComponent
+K2530341_BookDecorator ..|> K2530341_BookComponent
+K2530341_FeaturedDecorator --|> K2530341_BookDecorator
+K2530341_RecommendedDecorator --|> K2530341_BookDecorator
+
+K2530341_LibraryService o-- K2530341_Book
+K2530341_LibraryService o-- K2530341_User
+K2530341_LibraryService o-- K2530341_Borrow
+K2530341_LibraryService o-- K2530341_Reservation
+K2530341_LibraryService o-- K2530341_Notification
+K2530341_ReportService --> K2530341_LibraryService
+
+note right of K2530341_Book
+  Implements Subject for 
+  Observer pattern
+end note
+
+note right of K2530341_User
+  Implements Observer for
+  notification system
+end note
+
+@enduml
