@@ -90,3 +90,7 @@ $RECYCLE.BIN/
 *.dylib
 *.dll
 *.exe
+
+#coursework
+UML/
+*.md
