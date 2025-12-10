@@ -72,6 +72,7 @@ public class K2530341_UserManagementPane extends VBox {
     
     private void refreshTable() {
         List<K2530341_User> users = libraryService.getAllUsers();
+        userTable.getItems().clear();
         userTable.setItems(FXCollections.observableArrayList(users));
     }
     
@@ -84,34 +85,57 @@ public class K2530341_UserManagementPane extends VBox {
         grid.setVgap(10);
         grid.setPadding(new Insets(20));
         
-        TextField idField = new TextField();
+        // User ID will be auto-generated after type selection
+        TextField idField = new TextField("[Select type first]");
+        idField.setEditable(false);
+        idField.setStyle("-fx-background-color: #f0f0f0;");
+        
         TextField nameField = new TextField();
         TextField emailField = new TextField();
         TextField contactField = new TextField();
         ComboBox<K2530341_MembershipType> typeCombo = new ComboBox<>(
             FXCollections.observableArrayList(K2530341_MembershipType.values()));
         
-        grid.add(new Label("User ID:"), 0, 0);
-        grid.add(idField, 1, 0);
-        grid.add(new Label("Name:"), 0, 1);
-        grid.add(nameField, 1, 1);
-        grid.add(new Label("Email:"), 0, 2);
-        grid.add(emailField, 1, 2);
-        grid.add(new Label("Contact:"), 0, 3);
-        grid.add(contactField, 1, 3);
-        grid.add(new Label("Type:"), 0, 4);
-        grid.add(typeCombo, 1, 4);
+        // Update ID when type is selected
+        typeCombo.setOnAction(e -> {
+            if (typeCombo.getValue() != null) {
+                idField.setText(libraryService.peekNextUserId(typeCombo.getValue()));
+            }
+        });
+        
+        grid.add(new Label("User Type:*"), 0, 0);
+        grid.add(typeCombo, 1, 0);
+        grid.add(new Label("User ID:"), 0, 1);
+        grid.add(idField, 1, 1);
+        grid.add(new Label("Name:*"), 0, 2);
+        grid.add(nameField, 1, 2);
+        grid.add(new Label("Email:*"), 0, 3);
+        grid.add(emailField, 1, 3);
+        grid.add(new Label("Contact:*"), 0, 4);
+        grid.add(contactField, 1, 4);
         
         dialog.getDialogPane().setContent(grid);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         
         dialog.setResultConverter(button -> {
-            if (button == ButtonType.OK && typeCombo.getValue() != null) {
+            if (button == ButtonType.OK) {
+                // Validate required fields
+                if (typeCombo.getValue() == null) {
+                    showAlert("Validation Error", "Please select a user type.");
+                    return null;
+                }
+                if (nameField.getText().trim().isEmpty() || 
+                    emailField.getText().trim().isEmpty() || 
+                    contactField.getText().trim().isEmpty()) {
+                    showAlert("Validation Error", "Please fill in all required fields (marked with *).");
+                    return null;
+                }
+                
                 return new K2530341_User(
                     idField.getText(),
-                    nameField.getText(),
-                    emailField.getText(),
-                    contactField.getText(),
+                    nameField.getText().trim(),
+                    emailField.getText().trim(),
+                    contactField.getText().trim(),
                     typeCombo.getValue(),
                     0
                 );
@@ -121,9 +145,15 @@ public class K2530341_UserManagementPane extends VBox {
         
         dialog.showAndWait().ifPresent(user -> {
             if (user != null) {
-                libraryService.addUser(user);
-                refreshTable();
-                showAlert("Success", "User added successfully!");
+                String result = libraryService.addUser(user);
+                if ("SUCCESS".equals(result)) {
+                    refreshTable();
+                    showAlert("Success", "User added successfully!");
+                } else if ("DUPLICATE_ID".equals(result)) {
+                    showAlert("Error", "A user with ID '" + user.getUserId() + "' already exists.");
+                } else {
+                    showAlert("Error", "Failed to add user.");
+                }
             }
         });
     }
@@ -147,11 +177,11 @@ public class K2530341_UserManagementPane extends VBox {
         TextField emailField = new TextField(selected.getEmail());
         TextField contactField = new TextField(selected.getContactNumber());
         
-        grid.add(new Label("Name:"), 0, 0);
+        grid.add(new Label("Name:*"), 0, 0);
         grid.add(nameField, 1, 0);
-        grid.add(new Label("Email:"), 0, 1);
+        grid.add(new Label("Email:*"), 0, 1);
         grid.add(emailField, 1, 1);
-        grid.add(new Label("Contact:"), 0, 2);
+        grid.add(new Label("Contact:*"), 0, 2);
         grid.add(contactField, 1, 2);
         
         dialog.getDialogPane().setContent(grid);
@@ -161,9 +191,17 @@ public class K2530341_UserManagementPane extends VBox {
         
         dialog.showAndWait().ifPresent(result -> {
             if (result) {
-                selected.setName(nameField.getText());
-                selected.setEmail(emailField.getText());
-                selected.setContactNumber(contactField.getText());
+                // Validate required fields
+                if (nameField.getText().trim().isEmpty() || 
+                    emailField.getText().trim().isEmpty() || 
+                    contactField.getText().trim().isEmpty()) {
+                    showAlert("Validation Error", "Please fill in all required fields (marked with *).");
+                    return;
+                }
+                
+                selected.setName(nameField.getText().trim());
+                selected.setEmail(emailField.getText().trim());
+                selected.setContactNumber(contactField.getText().trim());
                 libraryService.updateUser(selected);
                 refreshTable();
                 showAlert("Success", "User updated successfully!");

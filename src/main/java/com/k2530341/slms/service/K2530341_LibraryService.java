@@ -35,6 +35,10 @@ public class K2530341_LibraryService {
     private int borrowIdCounter = 1;
     private int reservationIdCounter = 1;
     private int notificationIdCounter = 1;
+    private int bookIdCounter = 1;
+    private int studentIdCounter = 1;
+    private int facultyIdCounter = 1;
+    private int guestIdCounter = 1;
     
     /**
      * Initialize service and load data from CSV files.
@@ -52,16 +56,46 @@ public class K2530341_LibraryService {
         List<K2530341_Book> loadedBooks = bookCSV.loadBooks();
         for (K2530341_Book book : loadedBooks) {
             books.put(book.getBookId(), book);
+            // Update book ID counter
+            if (book.getBookId().startsWith("BK-")) {
+                try {
+                    int id = Integer.parseInt(book.getBookId().substring(3));
+                    if (id >= bookIdCounter) {
+                        bookIdCounter = id + 1;
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
         }
         
         // Load users
         List<K2530341_User> loadedUsers = userCSV.loadUsers();
         for (K2530341_User user : loadedUsers) {
             users.put(user.getUserId(), user);
+            // Update user ID counters based on type
+            String userId = user.getUserId();
+            try {
+                if (userId.startsWith("STU-")) {
+                    int id = Integer.parseInt(userId.substring(4));
+                    if (id >= studentIdCounter) {
+                        studentIdCounter = id + 1;
+                    }
+                } else if (userId.startsWith("FCL-")) {
+                    int id = Integer.parseInt(userId.substring(4));
+                    if (id >= facultyIdCounter) {
+                        facultyIdCounter = id + 1;
+                    }
+                } else if (userId.startsWith("GST-")) {
+                    int id = Integer.parseInt(userId.substring(4));
+                    if (id >= guestIdCounter) {
+                        guestIdCounter = id + 1;
+                    }
+                }
+            } catch (NumberFormatException ignored) {}
+        }
         }
         
         // Load borrows
-        List<K2530341_Borrow> loadedBorrows = borrowCSV.loadBorrows();
+        List<K2530341_Borrow> loadedBorrows = borrowCSV.loadBorrows();{
         for (K2530341_Borrow borrow : loadedBorrows) {
             borrows.put(borrow.getBorrowId(), borrow);
             int id = Integer.parseInt(borrow.getBorrowId().replaceAll("\\D", ""));
@@ -98,9 +132,30 @@ public class K2530341_LibraryService {
     
     // ========== BOOK MANAGEMENT ==========
     
-    public void addBook(K2530341_Book book) {
+    public String addBook(K2530341_Book book) {
+        if (books.containsKey(book.getBookId())) {
+            return "DUPLICATE_ID";
+        }
         books.put(book.getBookId(), book);
+        // Increment the counter only when book is actually added
+        if (book.getBookId().startsWith("BK-")) {
+            try {
+                int id = Integer.parseInt(book.getBookId().substring(3));
+                if (id >= bookIdCounter) {
+                    bookIdCounter = id + 1;
+                }
+            } catch (NumberFormatException ignored) {}
+        }
         saveAllData();
+        return "SUCCESS";
+    }
+    
+    public String peekNextBookId() {
+        return "BK-" + String.format("%03d", bookIdCounter);
+    }
+    
+    public String generateNextBookId() {
+        return "BK-" + String.format("%03d", bookIdCounter++);
     }
     
     public void updateBook(K2530341_Book book) {
@@ -132,9 +187,59 @@ public class K2530341_LibraryService {
     
     // ========== USER MANAGEMENT ==========
     
-    public void addUser(K2530341_User user) {
+    public String addUser(K2530341_User user) {
+        if (users.containsKey(user.getUserId())) {
+            return "DUPLICATE_ID";
+        }
         users.put(user.getUserId(), user);
+        // Increment the counter only when user is actually added
+        String userId = user.getUserId();
+        try {
+            if (userId.startsWith("STU-")) {
+                int id = Integer.parseInt(userId.substring(4));
+                if (id >= studentIdCounter) {
+                    studentIdCounter = id + 1;
+                }
+            } else if (userId.startsWith("FCL-")) {
+                int id = Integer.parseInt(userId.substring(4));
+                if (id >= facultyIdCounter) {
+                    facultyIdCounter = id + 1;
+                }
+            } else if (userId.startsWith("GST-")) {
+                int id = Integer.parseInt(userId.substring(4));
+                if (id >= guestIdCounter) {
+                    guestIdCounter = id + 1;
+                }
+            }
+        } catch (NumberFormatException ignored) {}
         saveAllData();
+        return "SUCCESS";
+    }
+    
+    public String peekNextUserId(K2530341_MembershipType type) {
+        switch (type) {
+            case STUDENT:
+                return "STU-" + String.format("%03d", studentIdCounter);
+            case FACULTY:
+                return "FCL-" + String.format("%03d", facultyIdCounter);
+            case GUEST:
+                return "GST-" + String.format("%03d", guestIdCounter);
+            default:
+                return "STU-" + String.format("%03d", studentIdCounter);
+        }
+    }
+    
+    public String generateNextUserId(K2530341_MembershipType type) {
+        switch (type) {
+            case STUDENT:
+                return "STU-" + String.format("%03d", studentIdCounter++);
+            case FACULTY:
+                return "FCL-" + String.format("%03d", facultyIdCounter++);
+            case GUEST:
+                return "GST-" + String.format("%03d", guestIdCounter++);
+            default:
+                return "STU-" + String.format("%03d", studentIdCounter++);
+        }
     }
     
     public void updateUser(K2530341_User user) {

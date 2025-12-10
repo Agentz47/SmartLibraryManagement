@@ -122,6 +122,7 @@ public class K2530341_BookManagementPane extends VBox {
     
     private void refreshTable() {
         List<K2530341_Book> books = libraryService.getAllBooks();
+        bookTable.getItems().clear();
         bookTable.setItems(FXCollections.observableArrayList(books));
     }
     
@@ -134,7 +135,11 @@ public class K2530341_BookManagementPane extends VBox {
         grid.setVgap(10);
         grid.setPadding(new Insets(20));
         
-        TextField idField = new TextField();
+        // Auto-generate ID and make it read-only - use peek to avoid incrementing
+        TextField idField = new TextField(libraryService.peekNextBookId());
+        idField.setEditable(false);
+        idField.setStyle("-fx-background-color: #f0f0f0;");
+        
         TextField titleField = new TextField();
         TextField authorField = new TextField();
         TextField categoryField = new TextField();
@@ -144,13 +149,13 @@ public class K2530341_BookManagementPane extends VBox {
         
         grid.add(new Label("Book ID:"), 0, 0);
         grid.add(idField, 1, 0);
-        grid.add(new Label("Title:"), 0, 1);
+        grid.add(new Label("Title:*"), 0, 1);
         grid.add(titleField, 1, 1);
-        grid.add(new Label("Author:"), 0, 2);
+        grid.add(new Label("Author:*"), 0, 2);
         grid.add(authorField, 1, 2);
-        grid.add(new Label("Category:"), 0, 3);
+        grid.add(new Label("Category:*"), 0, 3);
         grid.add(categoryField, 1, 3);
-        grid.add(new Label("ISBN:"), 0, 4);
+        grid.add(new Label("ISBN:*"), 0, 4);
         grid.add(isbnField, 1, 4);
         grid.add(new Label("Tags:"), 0, 5);
         grid.add(tagsField, 1, 5);
@@ -162,15 +167,24 @@ public class K2530341_BookManagementPane extends VBox {
         
         dialog.setResultConverter(button -> {
             if (button == ButtonType.OK) {
+                // Validate required fields
+                if (titleField.getText().trim().isEmpty() || 
+                    authorField.getText().trim().isEmpty() || 
+                    categoryField.getText().trim().isEmpty() || 
+                    isbnField.getText().trim().isEmpty()) {
+                    showAlert("Validation Error", "Please fill in all required fields (marked with *).");
+                    return null;
+                }
+                
                 try {
                     return new K2530341_BookBuilder()
                         .setBookId(idField.getText())
-                        .setTitle(titleField.getText())
-                        .setAuthor(authorField.getText())
-                        .setCategory(categoryField.getText())
-                        .setIsbn(isbnField.getText())
-                        .setOptionalTags(tagsField.getText())
-                        .setEdition(editionField.getText())
+                        .setTitle(titleField.getText().trim())
+                        .setAuthor(authorField.getText().trim())
+                        .setCategory(categoryField.getText().trim())
+                        .setIsbn(isbnField.getText().trim())
+                        .setOptionalTags(tagsField.getText().trim())
+                        .setEdition(editionField.getText().trim())
                         .build();
                 } catch (Exception e) {
                     showAlert("Error", "Invalid input: " + e.getMessage());
@@ -182,9 +196,15 @@ public class K2530341_BookManagementPane extends VBox {
         
         dialog.showAndWait().ifPresent(book -> {
             if (book != null) {
-                libraryService.addBook(book);
-                refreshTable();
-                showAlert("Success", "Book added successfully!");
+                String result = libraryService.addBook(book);
+                if ("SUCCESS".equals(result)) {
+                    refreshTable();
+                    showAlert("Success", "Book added successfully!");
+                } else if ("DUPLICATE_ID".equals(result)) {
+                    showAlert("Error", "A book with ID '" + book.getBookId() + "' already exists.");
+                } else {
+                    showAlert("Error", "Failed to add book.");
+                }
             }
         });
     }
@@ -209,13 +229,13 @@ public class K2530341_BookManagementPane extends VBox {
         TextField categoryField = new TextField(selected.getCategory());
         TextField isbnField = new TextField(selected.getIsbn());
         
-        grid.add(new Label("Title:"), 0, 0);
+        grid.add(new Label("Title:*"), 0, 0);
         grid.add(titleField, 1, 0);
-        grid.add(new Label("Author:"), 0, 1);
+        grid.add(new Label("Author:*"), 0, 1);
         grid.add(authorField, 1, 1);
-        grid.add(new Label("Category:"), 0, 2);
+        grid.add(new Label("Category:*"), 0, 2);
         grid.add(categoryField, 1, 2);
-        grid.add(new Label("ISBN:"), 0, 3);
+        grid.add(new Label("ISBN:*"), 0, 3);
         grid.add(isbnField, 1, 3);
         
         dialog.getDialogPane().setContent(grid);
@@ -225,10 +245,19 @@ public class K2530341_BookManagementPane extends VBox {
         
         dialog.showAndWait().ifPresent(result -> {
             if (result) {
-                selected.setTitle(titleField.getText());
-                selected.setAuthor(authorField.getText());
-                selected.setCategory(categoryField.getText());
-                selected.setIsbn(isbnField.getText());
+                // Validate required fields
+                if (titleField.getText().trim().isEmpty() || 
+                    authorField.getText().trim().isEmpty() || 
+                    categoryField.getText().trim().isEmpty() || 
+                    isbnField.getText().trim().isEmpty()) {
+                    showAlert("Validation Error", "Please fill in all required fields (marked with *).");
+                    return;
+                }
+                
+                selected.setTitle(titleField.getText().trim());
+                selected.setAuthor(authorField.getText().trim());
+                selected.setCategory(categoryField.getText().trim());
+                selected.setIsbn(isbnField.getText().trim());
                 libraryService.updateBook(selected);
                 refreshTable();
                 showAlert("Success", "Book updated successfully!");
