@@ -8,5 +8,5 @@ public enum K2530341_NotificationType {
     DUE_REMINDER,
     OVERDUE_ALERT,
     RESERVATION_READY,
-    OTHER
+    FINE_ALERT
 }

@@ -165,7 +165,7 @@ public class K2530341_OverduePane extends VBox {
         
         libraryService.createNotification(
             selected.userId,
-            K2530341_NotificationType.OTHER,
+            K2530341_NotificationType.FINE_ALERT,
             "FINE NOTIFICATION: You owe LKR " + selected.fineAmount + " for '" + selected.bookTitle + "' " +
             "(" + selected.overdueDays + " days overdue). Please pay at the library counter."
         );

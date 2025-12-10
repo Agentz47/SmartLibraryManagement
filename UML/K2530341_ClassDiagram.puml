@@ -30,7 +30,7 @@ package "Model Classes" {
         DUE_REMINDER
         OVERDUE_ALERT
         RESERVATION_READY
-        OTHER
+        FINE_ALERT
     }
     
     class K2530341_Book {

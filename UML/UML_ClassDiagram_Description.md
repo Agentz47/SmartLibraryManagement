@@ -127,7 +127,7 @@ This document describes the UML class diagram for the Smart Library Management S
 - DUE_REMINDER
 - OVERDUE_ALERT
 - RESERVATION_READY
-- OTHER
+- FINE_ALERT
 
 ## Design Pattern Classes
 

@@ -1,6 +1,8 @@
 package com.k2530341.slms.app;
 
 import com.k2530341.slms.model.book.*;
+import com.k2530341.slms.model.user.K2530341_User;
+import com.k2530341.slms.model.reservation.K2530341_ReservationStatus;
 import com.k2530341.slms.patterns.builder.K2530341_BookBuilder;
 import com.k2530341.slms.service.K2530341_LibraryService;
 import javafx.collections.FXCollections;
@@ -54,26 +56,68 @@ public class K2530341_BookManagementPane extends VBox {
     private void setupTable() {
         TableColumn<K2530341_Book, String> idCol = new TableColumn<>("Book ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("bookId"));
+        idCol.setPrefWidth(80);
         
         TableColumn<K2530341_Book, String> titleCol = new TableColumn<>("Title");
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
+        titleCol.setPrefWidth(150);
         
         TableColumn<K2530341_Book, String> authorCol = new TableColumn<>("Author");
         authorCol.setCellValueFactory(new PropertyValueFactory<>("author"));
+        authorCol.setPrefWidth(120);
         
         TableColumn<K2530341_Book, String> categoryCol = new TableColumn<>("Category");
         categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
+        categoryCol.setPrefWidth(100);
         
         TableColumn<K2530341_Book, String> isbnCol = new TableColumn<>("ISBN");
         isbnCol.setCellValueFactory(new PropertyValueFactory<>("isbn"));
+        isbnCol.setPrefWidth(100);
         
         TableColumn<K2530341_Book, String> statusCol = new TableColumn<>("Status");
         statusCol.setCellValueFactory(new PropertyValueFactory<>("availabilityStatus"));
+        statusCol.setPrefWidth(90);
+        
+        // NEW: Current Borrower/Reserver column
+        TableColumn<K2530341_Book, String> currentUserCol = new TableColumn<>("Current Borrower/Reserver");
+        currentUserCol.setCellValueFactory(cellData -> {
+            K2530341_Book book = cellData.getValue();
+            String displayText = getCurrentBookUser(book);
+            return new javafx.beans.property.SimpleStringProperty(displayText);
+        });
+        currentUserCol.setPrefWidth(180);
         
         TableColumn<K2530341_Book, Integer> borrowCountCol = new TableColumn<>("Borrow Count");
         borrowCountCol.setCellValueFactory(new PropertyValueFactory<>("borrowHistoryCount"));
+        borrowCountCol.setPrefWidth(100);
         
-        bookTable.getColumns().addAll(idCol, titleCol, authorCol, categoryCol, isbnCol, statusCol, borrowCountCol);
+        bookTable.getColumns().addAll(idCol, titleCol, authorCol, categoryCol, isbnCol, statusCol, currentUserCol, borrowCountCol);
+    }
+    
+    private String getCurrentBookUser(K2530341_Book book) {
+        if (book.getAvailabilityStatus() == K2530341_AvailabilityStatus.BORROWED) {
+            // Find who borrowed this book
+            return libraryService.getAllBorrows().stream()
+                .filter(b -> b.getBookId().equals(book.getBookId()) && b.getReturnDate() == null)
+                .findFirst()
+                .map(b -> {
+                    K2530341_User user = libraryService.getUser(b.getUserId());
+                    return user != null ? user.getName() + " (Borrowed)" : "Unknown";
+                })
+                .orElse("-");
+        } else if (book.getAvailabilityStatus() == K2530341_AvailabilityStatus.RESERVED) {
+            // Find who has notified reservation for this book
+            return libraryService.getAllReservations().stream()
+                .filter(r -> r.getBookId().equals(book.getBookId()) 
+                        && r.getStatus() == K2530341_ReservationStatus.NOTIFIED)
+                .findFirst()
+                .map(r -> {
+                    K2530341_User user = libraryService.getUser(r.getUserId());
+                    return user != null ? user.getName() + " (Reserved)" : "Unknown";
+                })
+                .orElse("-");
+        }
+        return "-";
     }
     
     private void refreshTable() {

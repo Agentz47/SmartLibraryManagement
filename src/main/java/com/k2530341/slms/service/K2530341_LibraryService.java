@@ -305,6 +305,21 @@ public class K2530341_LibraryService {
             return null;
         }
         
+        // FIX 1: Don't allow reservation of AVAILABLE books - they should be borrowed instead
+        if (book.getAvailabilityStatus() == K2530341_AvailabilityStatus.AVAILABLE) {
+            return "AVAILABLE"; // Special return value to indicate book is available to borrow
+        }
+        
+        // FIX 2: Don't allow user to reserve a book they currently have borrowed
+        boolean alreadyBorrowed = borrows.values().stream()
+            .anyMatch(b -> b.getBookId().equals(bookId) 
+                    && b.getUserId().equals(userId) 
+                    && b.getReturnDate() == null);
+        
+        if (alreadyBorrowed) {
+            return "ALREADY_BORROWED"; // Special return value
+        }
+        
         // Create reservation with structured ID
         String reservationId = "RES-" + String.format("%04d", reservationIdCounter++);
         K2530341_Reservation reservation = new K2530341_Reservation(
@@ -349,6 +364,10 @@ public class K2530341_LibraryService {
         return reservations.values().stream()
             .filter(r -> r.getUserId().equals(userId))
             .collect(Collectors.toList());
+    }
+    
+    public List<K2530341_Reservation> getAllReservations() {
+        return new ArrayList<>(reservations.values());
     }
     
     // ========== NOTIFICATION OPERATIONS ==========

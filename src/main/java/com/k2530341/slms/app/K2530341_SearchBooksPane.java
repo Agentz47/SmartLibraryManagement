@@ -152,11 +152,22 @@ public class K2530341_SearchBooksPane extends VBox {
             return;
         }
         
-        K2530341_Command reserveCommand = new K2530341_ReserveCommand(libraryService, selected.getBookId(), userId);
-        boolean success = commandManager.executeCommand(reserveCommand);
+        // Direct check for availability - if available, guide user to borrow instead
+        if (selected.getAvailabilityStatus() == K2530341_AvailabilityStatus.AVAILABLE) {
+            showAlert("Book Available", "This book is currently available to borrow now. Please use the 'Borrow Selected' button instead of reserving it.");
+            return;
+        }
         
-        if (success) {
-            showAlert("Success", "Book reserved successfully!");
+        K2530341_Command reserveCommand = new K2530341_ReserveCommand(libraryService, selected.getBookId(), userId);
+        String result = ((K2530341_ReserveCommand)reserveCommand).executeWithResult();
+        
+        if (result != null && result.startsWith("RES-")) {
+            showAlert("Success", "Book reserved successfully! You will be notified when it becomes available.");
+            loadAllBooks();
+        } else if ("AVAILABLE".equals(result)) {
+            showAlert("Book Available", "This book is currently available to borrow now. Please use the 'Borrow Selected' button instead of reserving it.");
+        } else if ("ALREADY_BORROWED".equals(result)) {
+            showAlert("Already Borrowed", "You currently have this book borrowed. You cannot reserve a book you already have.");
         } else {
             showAlert("Error", "Cannot reserve this book.");
         }

@@ -22,8 +22,14 @@ public class K2530341_ReserveCommand implements K2530341_Command {
     @Override
     public boolean execute() {
         reservationId = libraryService.reserveBook(bookId, userId);
-        executed = (reservationId != null);
+        executed = (reservationId != null && reservationId.startsWith("RES-"));
         return executed;
+    }
+    
+    public String executeWithResult() {
+        reservationId = libraryService.reserveBook(bookId, userId);
+        executed = (reservationId != null && reservationId.startsWith("RES-"));
+        return reservationId;
     }
     
     @Override
