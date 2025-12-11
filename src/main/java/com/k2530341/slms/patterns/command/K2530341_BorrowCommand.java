@@ -22,7 +22,8 @@ public class K2530341_BorrowCommand implements K2530341_Command {
     @Override
     public boolean execute() {
         borrowId = libraryService.borrowBook(bookId, userId);
-        executed = (borrowId != null);
+        // Success only if we get a valid borrow ID (not null and not an error code)
+        executed = (borrowId != null && !borrowId.equals("LIMIT_EXCEEDED") && !borrowId.equals("FINE_LIMIT_EXCEEDED"));
         return executed;
     }
     

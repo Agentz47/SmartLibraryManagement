@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  */
 public class K2530341_LibraryService {
     // max fine limit - user cannot borrow if they exceed this
-    public static final double MAX_UNPAID_LIMIT = 5000.0;
+    public static final double MAX_UNPAID_LIMIT = 1000.0;
     
     // using HashMaps to store all data - easy to lookup by ID
     private final Map<String, K2530341_Book> books = new HashMap<>();
@@ -275,12 +275,12 @@ public class K2530341_LibraryService {
         
         // Check borrow limit
         if (user.getCurrentBorrowCount() >= user.getMembershipType().getBorrowLimit()) {
-            return null;
+            return "LIMIT_EXCEEDED";
         }
         
-        // Check unpaid fines
+        // Check unpaid fines - IMPORTANT: This blocks borrowing if fines >= LKR 1000
         if (user.getUnpaidFines() >= MAX_UNPAID_LIMIT) {
-            return null;
+            return "FINE_LIMIT_EXCEEDED";
         }
         
         // Check if book is available OR reserved for this specific user

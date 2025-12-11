@@ -114,9 +114,12 @@ public class K2530341_SearchBooksPane extends VBox {
         String errorMessage = null;
         
         if (user.getCurrentBorrowCount() >= user.getMembershipType().getBorrowLimit()) {
-            errorMessage = "You have reached your borrow limit (" + user.getMembershipType().getBorrowLimit() + " books).";
+            errorMessage = String.format("You have reached your borrow limit of %d books.\n\n" +
+                "Please return some books before borrowing more.", user.getMembershipType().getBorrowLimit());
         } else if (user.getUnpaidFines() >= K2530341_LibraryService.MAX_UNPAID_LIMIT) {
-            errorMessage = "You have unpaid fines of LKR " + user.getUnpaidFines() + ". Maximum limit is LKR " + K2530341_LibraryService.MAX_UNPAID_LIMIT + ".";
+            errorMessage = String.format("You have unpaid fines of LKR %.2f which exceeds the limit of LKR %.2f.\n\n" +
+                "Please clear your fines at the library counter before borrowing more books.",
+                user.getUnpaidFines(), K2530341_LibraryService.MAX_UNPAID_LIMIT);
         } else if (selected.getAvailabilityStatus() == K2530341_AvailabilityStatus.BORROWED) {
             errorMessage = "This book is currently borrowed. You can reserve it instead.";
         } else if (selected.getAvailabilityStatus() == K2530341_AvailabilityStatus.RESERVED) {
