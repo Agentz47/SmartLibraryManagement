@@ -14,24 +14,29 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Main library service handling all business logic.
- * Author: M.Y.M. SAJIDH (K2530341)
+ * Library Service - handles all the main business operations
+ * @author Sajidh (K2530341)
+ * This class manages books, users, borrowing, reservations etc.
  */
 public class K2530341_LibraryService {
+    // max fine limit - user cannot borrow if they exceed this
     public static final double MAX_UNPAID_LIMIT = 5000.0;
     
+    // using HashMaps to store all data - easy to lookup by ID
     private final Map<String, K2530341_Book> books = new HashMap<>();
     private final Map<String, K2530341_User> users = new HashMap<>();
     private final Map<String, K2530341_Borrow> borrows = new HashMap<>();
     private final Map<String, K2530341_Reservation> reservations = new HashMap<>();
     private final Map<String, K2530341_Notification> notifications = new HashMap<>();
     
+    // CSV managers for loading/saving data
     private final K2530341_BookCSVManager bookCSV = new K2530341_BookCSVManager();
     private final K2530341_UserCSVManager userCSV = new K2530341_UserCSVManager();
     private final K2530341_BorrowCSVManager borrowCSV = new K2530341_BorrowCSVManager();
     private final K2530341_ReservationCSVManager reservationCSV = new K2530341_ReservationCSVManager();
     private final K2530341_NotificationCSVManager notificationCSV = new K2530341_NotificationCSVManager();
     
+    // counters for generating IDs
     private int borrowIdCounter = 1;
     private int reservationIdCounter = 1;
     private int notificationIdCounter = 1;
@@ -40,12 +45,10 @@ public class K2530341_LibraryService {
     private int facultyIdCounter = 1;
     private int guestIdCounter = 1;
     
-    /**
-     * Initialize service and load data from CSV files.
-     */
+    // initialize method - called when app starts
     public void initialize() {
         loadAllData();
-        cleanupExpiredReservations(); // Clean up any expired reservations on startup
+        cleanupExpiredReservations(); // check for any expired reservations
     }
     
     /**
@@ -493,7 +496,7 @@ public class K2530341_LibraryService {
             .collect(Collectors.toList());
     }
     
-    // ========== HELPER METHODS ==========
+    //HELPER METHODS
     
     private K2530341_FineStrategy getFineStrategy(K2530341_MembershipType type) {
         switch (type) {
@@ -568,5 +571,31 @@ public class K2530341_LibraryService {
         if (dataChanged) {
             saveAllData();
         }
+    }
+    
+    /**
+     * Calculate the fine for a borrow without actually returning it.
+     * Useful for showing fine amount before return.
+     * @param borrowId The borrow ID
+     * @return Fine amount, or 0 if no fine or invalid borrow
+     */
+    public double calculateFineForBorrow(String borrowId) {
+        K2530341_Borrow borrow = borrows.get(borrowId);
+        if (borrow == null || borrow.getReturnDate() != null) {
+            return 0.0;
+        }
+        
+        K2530341_User user = users.get(borrow.getUserId());
+        if (user == null) {
+            return 0.0;
+        }
+        
+        long overdueDays = borrow.getOverdueDays();
+        if (overdueDays > 0) {
+            K2530341_FineStrategy fineStrategy = getFineStrategy(user.getMembershipType());
+            return fineStrategy.calculateFine(overdueDays);
+        }
+        
+        return 0.0;
     }
 }

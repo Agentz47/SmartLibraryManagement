@@ -24,8 +24,8 @@ class K2530341_ObserverPatternTest {
             .setIsbn("123")
             .build();
         
-        K2530341_User user = new K2530341_User("U001", "Test User", 
-            "test@test.com", "123", K2530341_MembershipType.STUDENT, 0);
+        K2530341_User user = new K2530341_Student("U001", "Test User", 
+            "test@test.com", "123", 0);
         
         book.attach(user);
         book.notifyObservers("TEST_EVENT", "Test message");
@@ -45,8 +45,8 @@ class K2530341_ObserverPatternTest {
             .setIsbn("456")
             .build();
         
-        K2530341_User user = new K2530341_User("U002", "Test User 2", 
-            "test2@test.com", "456", K2530341_MembershipType.STUDENT, 0);
+        K2530341_User user = new K2530341_Student("U002", "Test User 2", 
+            "test2@test.com", "456", 0);
         
         book.attach(user);
         book.detach(user);

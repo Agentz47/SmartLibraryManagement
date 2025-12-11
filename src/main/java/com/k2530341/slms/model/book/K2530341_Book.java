@@ -8,26 +8,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a Book in the library system with state management and observer pattern.
- * Author: M.Y.M. SAJIDH (K2530341)
+ * Book class - represents a book in the library
+ * Implements Subject interface for observer pattern (to notify users)
+ * Uses State pattern to manage book availability status
+ * @author Sajidh (K2530341)
  */
 public class K2530341_Book implements K2530341_Subject {
+    // basic book info
     private String bookId;
     private String title;
     private String author;
     private String category;
     private String isbn;
     private K2530341_AvailabilityStatus availabilityStatus;
-    private int borrowHistoryCount;
+    private int borrowHistoryCount; // how many times borrowed
     private String optionalTags;
     private String edition;
     
-    // State pattern
+    // for state pattern - manages what operations are allowed
     private K2530341_BookState currentState;
     
-    // Observer pattern
+    // for observer pattern - list of users watching this book
     private final List<K2530341_Observer> observers = new ArrayList<>();
     
+    // constructor
     public K2530341_Book(String bookId, String title, String author, String category, 
                          String isbn, K2530341_AvailabilityStatus availabilityStatus, 
                          int borrowHistoryCount, String optionalTags, String edition) {
@@ -40,10 +44,11 @@ public class K2530341_Book implements K2530341_Subject {
         this.borrowHistoryCount = borrowHistoryCount;
         this.optionalTags = optionalTags;
         this.edition = edition;
+        // start with available state by default
         this.currentState = new K2530341_AvailableState();
     }
     
-    // State pattern methods
+    // change the state of the book
     public void setState(K2530341_BookState state) {
         this.currentState = state;
     }

@@ -4,28 +4,28 @@
 **Student ID:** K2530341  
 **Version:** 1.0
 
-## Overview
+## About This Project
 
-The Smart Library Management System (SLMS) is a comprehensive Java application with a JavaFX GUI and CSV-based persistence. It implements multiple design patterns and supports role-based functionality for librarians and users (students, faculty, guests).
+This is my library management system built with Java and JavaFX. It's a complete solution for managing books, users, borrowing, and reservations in a library. I implemented 6 different design patterns and used CSV files to store all the data.
 
-## Features
+## Main Features
 
-- **Book Management**: Full CRUD operations for books
-- **User Management**: Full CRUD operations for users
-- **Borrow/Return System**: Automatic fine calculation based on membership type
-- **Reservation Queue**: FIFO reservation system with 48-hour hold window
-- **Notifications**: Observer pattern-based notification system
-- **Reports**: Most-borrowed books, active borrowers, overdue books
-- **Design Patterns**: Observer, Strategy, Builder, Command, State, Decorator
+- **Book Management**: Add, edit, delete books with auto-generated IDs
+- **User Management**: Manage students, faculty, and guest users
+- **Borrow/Return**: Books can be borrowed and returned with automatic fine calculation
+- **Reservation System**: Users can reserve borrowed books and get notified when available
+- **Notifications**: Real-time notifications using Observer pattern
+- **Reports**: Generate reports for overdue books, most borrowed books etc
+- **Design Patterns**: I used Observer, Strategy, Builder, Command, State, and Decorator patterns
 
-## Technology Stack
+## Technologies Used
 
 - **Java:** 17
-- **GUI Framework:** JavaFX 21
+- **GUI:** JavaFX 21  
 - **Build Tool:** Maven
 - **Testing:** JUnit 5
-- **CSV Library:** OpenCSV 5.9
-- **Code Coverage:** JaCoCo
+- **CSV:** OpenCSV 5.9
+- **Coverage:** JaCoCo
 
 ## Project Structure
 
@@ -37,7 +37,7 @@ slms/
 │   │       └── com/
 │   │           └── k2530341/
 │   │               └── slms/
-│   │                   ├── app/           # JavaFX application & UI
+│   │                   ├── app/           # GUI windows and screens
 │   │                   ├── model/         # Domain models
 │   │                   ├── patterns/      # Design pattern implementations
 │   │                   ├── persistence/   # CSV managers

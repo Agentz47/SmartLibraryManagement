@@ -2,7 +2,6 @@ package com.k2530341.slms.patterns.strategy;
 
 /**
  * Strategy interface for calculating fines based on membership type.
- * Author: M.Y.M. SAJIDH (K2530341)
  */
 public interface K2530341_FineStrategy {
     /**

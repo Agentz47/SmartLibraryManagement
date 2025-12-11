@@ -10,10 +10,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
-/**
- * CSV persistence manager for books with atomic write operations.
- * Author: M.Y.M. SAJIDH (K2530341)
- */
+ //CSV persistence manager for books with atomic write operations.
 public class K2530341_BookCSVManager {
     private static final String CSV_FILE = "data/books.csv";
     private static final String[] HEADER = {

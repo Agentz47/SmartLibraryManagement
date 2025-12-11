@@ -94,3 +94,6 @@ $RECYCLE.BIN/
 #coursework
 UML/
 *.md
+
+#log
+!CHANGELOG.md

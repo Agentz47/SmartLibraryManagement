@@ -120,10 +120,12 @@ public class K2530341_UserManagementPane extends VBox {
         dialog.setResultConverter(button -> {
             if (button == ButtonType.OK) {
                 // Validate required fields
+                // Validate user input before processing
                 if (typeCombo.getValue() == null) {
                     showAlert("Validation Error", "Please select a user type.");
                     return null;
                 }
+                // Check for empty fields
                 if (nameField.getText().trim().isEmpty() || 
                     emailField.getText().trim().isEmpty() || 
                     contactField.getText().trim().isEmpty()) {
@@ -131,14 +133,43 @@ public class K2530341_UserManagementPane extends VBox {
                     return null;
                 }
                 
-                return new K2530341_User(
-                    idField.getText(),
-                    nameField.getText().trim(),
-                    emailField.getText().trim(),
-                    contactField.getText().trim(),
-                    typeCombo.getValue(),
-                    0
-                );
+                // Create appropriate user subclass based on type
+                K2530341_MembershipType type = typeCombo.getValue();
+                K2530341_User user;
+                
+                switch (type) {
+                    case STUDENT:
+                        user = new K2530341_Student(
+                            idField.getText(),
+                            nameField.getText().trim(),
+                            emailField.getText().trim(),
+                            contactField.getText().trim(),
+                            0
+                        );
+                        break;
+                    case FACULTY:
+                        user = new K2530341_Faculty(
+                            idField.getText(),
+                            nameField.getText().trim(),
+                            emailField.getText().trim(),
+                            contactField.getText().trim(),
+                            0
+                        );
+                        break;
+                    case GUEST:
+                        user = new K2530341_Guest(
+                            idField.getText(),
+                            nameField.getText().trim(),
+                            emailField.getText().trim(),
+                            contactField.getText().trim(),
+                            0
+                        );
+                        break;
+                    default:
+                        return null;
+                }
+                
+                return user;
             }
             return null;
         });

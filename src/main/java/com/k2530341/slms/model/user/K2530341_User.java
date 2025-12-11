@@ -5,10 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a User in the library system implementing the Observer pattern.
+ * Abstract base class for all users in the library system.
+ * Implements the Observer pattern to receive notifications.
  * Author: M.Y.M. SAJIDH (K2530341)
  */
-public class K2530341_User implements K2530341_Observer {
+public abstract class K2530341_User implements K2530341_Observer {
     private String userId;
     private String name;
     private String email;
@@ -38,7 +39,7 @@ public class K2530341_User implements K2530341_Observer {
     public void incrementBorrowCount() {
         this.currentBorrowCount++;
     }
-    
+    // Prevent negative borrow count
     public void decrementBorrowCount() {
         if (this.currentBorrowCount > 0) {
             this.currentBorrowCount--;
@@ -48,7 +49,7 @@ public class K2530341_User implements K2530341_Observer {
     public void addFine(double amount) {
         this.unpaidFines += amount;
     }
-    
+    // Prevent negative fines
     public void payFine(double amount) {
         this.unpaidFines -= amount;
         if (this.unpaidFines < 0) {
@@ -63,6 +64,18 @@ public class K2530341_User implements K2530341_Observer {
     public void clearNotifications() {
         notifications.clear();
     }
+    
+    /**
+     * Abstract method to get borrow limit based on user type.
+     * @return Maximum number of books that can be borrowed
+     */
+    public abstract int getBorrowLimit();
+    
+    /**
+     * Abstract method to get borrow period in days.
+     * @return Number of days books can be borrowed
+     */
+    public abstract int getBorrowPeriodDays();
     
     // Getters and setters
     public String getUserId() {

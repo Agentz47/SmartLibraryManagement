@@ -1,14 +1,10 @@
 package com.k2530341.slms.patterns.observer;
-
 /**
- * Observer interface for the Observer pattern.
- * Author: M.Y.M. SAJIDH (K2530341)
+ * Observer interface - objects that want to be notified of changes
+ * Part of Observer design pattern
+ * @author Sajidh (K2530341)
  */
 public interface K2530341_Observer {
-    /**
-     * Update method called when the subject's state changes.
-     * @param event The event type
-     * @param message The notification message
-     */
+    // this gets called when something changes in the subject
     void update(String event, String message);
 }

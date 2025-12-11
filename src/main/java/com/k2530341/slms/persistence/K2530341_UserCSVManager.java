@@ -2,8 +2,7 @@ package com.k2530341.slms.persistence;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
-import com.k2530341.slms.model.user.K2530341_User;
-import com.k2530341.slms.model.user.K2530341_MembershipType;
+import com.k2530341.slms.model.user.*;
 
 import java.io.*;
 import java.nio.file.*;
@@ -42,14 +41,42 @@ public class K2530341_UserCSVManager {
                 }
                 
                 if (line.length >= 6) {
-                    K2530341_User user = new K2530341_User(
-                        line[0], // userId
-                        line[1], // name
-                        line[2], // email
-                        line[3], // contactNumber
-                        K2530341_MembershipType.valueOf(line[4]), // membershipType
-                        Integer.parseInt(line[5]) // currentBorrowCount
-                    );
+                    K2530341_MembershipType type = K2530341_MembershipType.valueOf(line[4]);
+                    K2530341_User user;
+                    
+                    // Create appropriate subclass based on membership type
+                    switch (type) {
+                        case STUDENT:
+                            user = new K2530341_Student(
+                                line[0], // userId
+                                line[1], // name
+                                line[2], // email
+                                line[3], // contactNumber
+                                Integer.parseInt(line[5]) // currentBorrowCount
+                            );
+                            break;
+                        case FACULTY:
+                            user = new K2530341_Faculty(
+                                line[0], // userId
+                                line[1], // name
+                                line[2], // email
+                                line[3], // contactNumber
+                                Integer.parseInt(line[5]) // currentBorrowCount
+                            );
+                            break;
+                        case GUEST:
+                            user = new K2530341_Guest(
+                                line[0], // userId
+                                line[1], // name
+                                line[2], // email
+                                line[3], // contactNumber
+                                Integer.parseInt(line[5]) // currentBorrowCount
+                            );
+                            break;
+                        default:
+                            continue; // Skip unknown types
+                    }
+                    
                     users.add(user);
                 }
             }

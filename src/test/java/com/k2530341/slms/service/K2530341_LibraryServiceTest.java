@@ -38,16 +38,16 @@ class K2530341_LibraryServiceTest {
         libraryService.addBook(testBook);
         
         // Create test users
-        testStudent = new K2530341_User("STUDENT001", "John Student", 
-            "john@test.com", "1234567890", K2530341_MembershipType.STUDENT, 0);
+        testStudent = new K2530341_Student("STUDENT001", "John Student", 
+            "john@test.com", "1234567890", 0);
         libraryService.addUser(testStudent);
         
-        testFaculty = new K2530341_User("FACULTY001", "Jane Faculty", 
-            "jane@test.com", "0987654321", K2530341_MembershipType.FACULTY, 0);
+        testFaculty = new K2530341_Faculty("FACULTY001", "Jane Faculty", 
+            "jane@test.com", "0987654321", 0);
         libraryService.addUser(testFaculty);
         
-        testGuest = new K2530341_User("GUEST001", "Bob Guest", 
-            "bob@test.com", "5555555555", K2530341_MembershipType.GUEST, 0);
+        testGuest = new K2530341_Guest("GUEST001", "Bob Guest", 
+            "bob@test.com", "5555555555", 0);
         libraryService.addUser(testGuest);
     }
     
