@@ -35,14 +35,17 @@ public class K2530341_UserManagementPane extends VBox {
         Button addBtn = new Button("Add User");
         Button editBtn = new Button("Edit User");
         Button deleteBtn = new Button("Delete User");
+        Button payFinesBtn = new Button("Pay Fines");
+        payFinesBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
         Button refreshBtn = new Button("Refresh");
         
         addBtn.setOnAction(e -> showAddUserDialog());
         editBtn.setOnAction(e -> showEditUserDialog());
         deleteBtn.setOnAction(e -> deleteSelectedUser());
+        payFinesBtn.setOnAction(e -> showPayFinesDialog());
         refreshBtn.setOnAction(e -> refreshTable());
         
-        buttonBox.getChildren().addAll(addBtn, editBtn, deleteBtn, refreshBtn);
+        buttonBox.getChildren().addAll(addBtn, editBtn, deleteBtn, payFinesBtn, refreshBtn);
         
         getChildren().addAll(new Label("User Management"), buttonBox, userTable);
         VBox.setVgrow(userTable, Priority.ALWAYS);
@@ -67,7 +70,11 @@ public class K2530341_UserManagementPane extends VBox {
         TableColumn<K2530341_User, Integer> borrowsCol = new TableColumn<>("Current Borrows");
         borrowsCol.setCellValueFactory(new PropertyValueFactory<>("currentBorrowCount"));
         
-        userTable.getColumns().addAll(idCol, nameCol, emailCol, contactCol, typeCol, borrowsCol);
+        TableColumn<K2530341_User, Double> finesCol = new TableColumn<>("Unpaid Fines (LKR)");
+        finesCol.setCellValueFactory(new PropertyValueFactory<>("unpaidFines"));
+        finesCol.setPrefWidth(120);
+        
+        userTable.getColumns().addAll(idCol, nameCol, emailCol, contactCol, typeCol, borrowsCol, finesCol);
     }
     
     private void refreshTable() {
@@ -257,6 +264,86 @@ public class K2530341_UserManagementPane extends VBox {
                 libraryService.deleteUser(selected.getUserId());
                 refreshTable();
                 showAlert("Success", "User deleted successfully!");
+            }
+        });
+    }
+    
+    private void showPayFinesDialog() {
+        K2530341_User selected = userTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert("Warning", "Please select a user to pay fines for.");
+            return;
+        }
+        
+        double currentFines = selected.getUnpaidFines();
+        if (currentFines <= 0) {
+            showAlert("No Fines", "This user has no unpaid fines.");
+            return;
+        }
+        
+        Dialog<Double> dialog = new Dialog<>();
+        dialog.setTitle("Pay Fines - " + selected.getName());
+        dialog.setHeaderText(String.format("Current Unpaid Fines: LKR %.2f", currentFines));
+        
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+        
+        TextField amountField = new TextField();
+        amountField.setPromptText("Enter amount to pay");
+        
+        Button payFullBtn = new Button("Pay Full Amount");
+        payFullBtn.setOnAction(e -> amountField.setText(String.format("%.2f", currentFines)));
+        
+        grid.add(new Label("Payment Amount (LKR):*"), 0, 0);
+        grid.add(amountField, 1, 0);
+        grid.add(payFullBtn, 2, 0);
+        
+        Label infoLabel = new Label("Enter the amount paid by the user.\nYou can pay partially or in full.");
+        infoLabel.setStyle("-fx-text-fill: #666; -fx-font-size: 11px;");
+        grid.add(infoLabel, 0, 1, 3, 1);
+        
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        
+        dialog.setResultConverter(button -> {
+            if (button == ButtonType.OK) {
+                try {
+                    double amount = Double.parseDouble(amountField.getText().trim());
+                    if (amount <= 0) {
+                        showAlert("Invalid Amount", "Payment amount must be greater than zero.");
+                        return null;
+                    }
+                    if (amount > currentFines) {
+                        showAlert("Invalid Amount", 
+                            String.format("Payment amount (LKR %.2f) cannot exceed unpaid fines (LKR %.2f).", 
+                                amount, currentFines));
+                        return null;
+                    }
+                    return amount;
+                } catch (NumberFormatException e) {
+                    showAlert("Invalid Input", "Please enter a valid number.");
+                    return null;
+                }
+            }
+            return null;
+        });
+        
+        dialog.showAndWait().ifPresent(amount -> {
+            if (amount != null) {
+                selected.payFine(amount);
+                libraryService.saveAllData();
+                refreshTable();
+                
+                double remaining = selected.getUnpaidFines();
+                String message;
+                if (remaining <= 0) {
+                    message = String.format("Payment of LKR %.2f received.\n\nAll fines cleared! User can now borrow books.", amount);
+                } else {
+                    message = String.format("Payment of LKR %.2f received.\n\nRemaining fines: LKR %.2f", amount, remaining);
+                }
+                showAlert("Payment Successful", message);
             }
         });
     }

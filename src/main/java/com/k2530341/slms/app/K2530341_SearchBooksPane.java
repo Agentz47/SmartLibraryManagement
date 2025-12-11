@@ -24,6 +24,7 @@ public class K2530341_SearchBooksPane extends VBox {
     private final K2530341_CommandManager commandManager;
     private TableView<K2530341_Book> bookTable;
     private TextField searchField;
+    private Label fineStatusLabel;
     
     public K2530341_SearchBooksPane(K2530341_LibraryService libraryService, String userId, K2530341_CommandManager commandManager) {
         this.libraryService = libraryService;
@@ -39,6 +40,10 @@ public class K2530341_SearchBooksPane extends VBox {
         
         Label titleLabel = new Label("Search & Borrow Books");
         titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        
+        // Add fine status label
+        fineStatusLabel = new Label();
+        updateFineStatus();
         
         HBox searchBox = new HBox(10);
         searchField = new TextField();
@@ -64,8 +69,26 @@ public class K2530341_SearchBooksPane extends VBox {
         
         actionBox.getChildren().addAll(borrowBtn, reserveBtn);
         
-        getChildren().addAll(titleLabel, searchBox, bookTable, actionBox);
+        getChildren().addAll(titleLabel, fineStatusLabel, searchBox, bookTable, actionBox);
         VBox.setVgrow(bookTable, Priority.ALWAYS);
+    }
+    
+    private void updateFineStatus() {
+        K2530341_User user = libraryService.getUser(userId);
+        if (user != null) {
+            double unpaidFines = user.getUnpaidFines();
+            
+            if (unpaidFines >= K2530341_LibraryService.MAX_UNPAID_LIMIT) {
+                fineStatusLabel.setText(String.format("⚠️ WARNING: Unpaid Fines: LKR %.2f (LIMIT EXCEEDED - Cannot borrow books!)", unpaidFines));
+                fineStatusLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #F44336; -fx-font-weight: bold; -fx-padding: 5px; -fx-background-color: #FFEBEE; -fx-background-radius: 5px;");
+            } else if (unpaidFines > 0) {
+                fineStatusLabel.setText(String.format("💰 Unpaid Fines: LKR %.2f / LKR %.2f limit", unpaidFines, K2530341_LibraryService.MAX_UNPAID_LIMIT));
+                fineStatusLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #FF9800; -fx-font-weight: bold; -fx-padding: 5px; -fx-background-color: #FFF3E0; -fx-background-radius: 5px;");
+            } else {
+                fineStatusLabel.setText("✅ No Unpaid Fines - Good Standing");
+                fineStatusLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #4CAF50; -fx-font-weight: bold; -fx-padding: 5px; -fx-background-color: #E8F5E9; -fx-background-radius: 5px;");
+            }
+        }
     }
     
     private void setupTable() {
@@ -143,6 +166,7 @@ public class K2530341_SearchBooksPane extends VBox {
         if (success) {
             showAlert("Success", "Book borrowed successfully!");
             loadAllBooks();
+            updateFineStatus(); // Refresh fine status after borrowing
         } else {
             showAlert("Error", "Cannot borrow this book. Please check with the librarian.");
         }
