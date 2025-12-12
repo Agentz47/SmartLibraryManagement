@@ -4,6 +4,7 @@ import com.k2530341.slms.model.book.*;
 import com.k2530341.slms.model.user.K2530341_User;
 import com.k2530341.slms.model.reservation.K2530341_ReservationStatus;
 import com.k2530341.slms.patterns.builder.K2530341_BookBuilder;
+import com.k2530341.slms.patterns.decorator.*;
 import com.k2530341.slms.service.K2530341_LibraryService;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -49,7 +50,24 @@ public class K2530341_BookManagementPane extends VBox {
         
         buttonBox.getChildren().addAll(addBtn, editBtn, deleteBtn, refreshBtn);
         
-        getChildren().addAll(new Label("Book Management"), buttonBox, bookTable);
+        // Decorator Pattern buttons
+        HBox decoratorBox = new HBox(10);
+        decoratorBox.setStyle("-fx-padding: 5px; -fx-background-color: #E3F2FD; -fx-background-radius: 5px;");
+        Label decorLabel = new Label("Decorator Pattern:");
+        decorLabel.setStyle("-fx-font-weight: bold;");
+        Button featuredBtn = new Button("⭐ Mark as Featured");
+        featuredBtn.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white;");
+        Button recommendedBtn = new Button("👍 Mark as Recommended");
+        recommendedBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
+        Button viewDecorBtn = new Button("View Decorations");
+        
+        featuredBtn.setOnAction(e -> markBookAsFeatured());
+        recommendedBtn.setOnAction(e -> markBookAsRecommended());
+        viewDecorBtn.setOnAction(e -> viewBookDecorations());
+        
+        decoratorBox.getChildren().addAll(decorLabel, featuredBtn, recommendedBtn, viewDecorBtn);
+        
+        getChildren().addAll(new Label("Book Management"), buttonBox, decoratorBox, bookTable);
         VBox.setVgrow(bookTable, Priority.ALWAYS);
     }
     
@@ -91,7 +109,22 @@ public class K2530341_BookManagementPane extends VBox {
         borrowCountCol.setCellValueFactory(new PropertyValueFactory<>("borrowHistoryCount"));
         borrowCountCol.setPrefWidth(100);
         
-        bookTable.getColumns().addAll(idCol, titleCol, authorCol, categoryCol, isbnCol, statusCol, currentUserCol, borrowCountCol);
+        // Builder Pattern: Optional metadata columns
+        TableColumn<K2530341_Book, String> tagsCol = new TableColumn<>("Tags (Builder)");
+        tagsCol.setCellValueFactory(cellData -> {
+            String tags = cellData.getValue().getOptionalTags();
+            return new javafx.beans.property.SimpleStringProperty(tags != null && !tags.isEmpty() ? tags : "-");
+        });
+        tagsCol.setPrefWidth(150);
+        
+        TableColumn<K2530341_Book, String> editionCol = new TableColumn<>("Edition (Builder)");
+        editionCol.setCellValueFactory(cellData -> {
+            String edition = cellData.getValue().getEdition();
+            return new javafx.beans.property.SimpleStringProperty(edition != null && !edition.isEmpty() ? edition : "-");
+        });
+        editionCol.setPrefWidth(120);
+        
+        bookTable.getColumns().addAll(idCol, titleCol, authorCol, categoryCol, isbnCol, statusCol, currentUserCol, borrowCountCol, tagsCol, editionCol);
     }
     
     private String getCurrentBookUser(K2530341_Book book) {
@@ -128,7 +161,8 @@ public class K2530341_BookManagementPane extends VBox {
     
     private void showAddBookDialog() {
         Dialog<K2530341_Book> dialog = new Dialog<>();
-        dialog.setTitle("Add Book");
+        dialog.setTitle("Add Book (Builder Pattern)");
+        dialog.setHeaderText("Create a book with optional metadata using Builder Pattern");
         
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -145,7 +179,15 @@ public class K2530341_BookManagementPane extends VBox {
         TextField categoryField = new TextField();
         TextField isbnField = new TextField();
         TextField tagsField = new TextField();
+        tagsField.setPromptText("e.g., Programming, Object-Oriented, Design Patterns");
         TextField editionField = new TextField();
+        editionField.setPromptText("e.g., 1st Edition, Revised 2024");
+        
+        // Highlight optional fields for Builder Pattern
+        Label tagsLabel = new Label("Tags (Optional - Builder Pattern):");
+        tagsLabel.setStyle("-fx-text-fill: #2196F3; -fx-font-style: italic;");
+        Label editionLabel = new Label("Edition (Optional - Builder Pattern):");
+        editionLabel.setStyle("-fx-text-fill: #2196F3; -fx-font-style: italic;");
         
         grid.add(new Label("Book ID:"), 0, 0);
         grid.add(idField, 1, 0);
@@ -157,9 +199,9 @@ public class K2530341_BookManagementPane extends VBox {
         grid.add(categoryField, 1, 3);
         grid.add(new Label("ISBN:*"), 0, 4);
         grid.add(isbnField, 1, 4);
-        grid.add(new Label("Tags:"), 0, 5);
+        grid.add(tagsLabel, 0, 5);
         grid.add(tagsField, 1, 5);
-        grid.add(new Label("Edition:"), 0, 6);
+        grid.add(editionLabel, 0, 6);
         grid.add(editionField, 1, 6);
         
         dialog.getDialogPane().setContent(grid);
@@ -284,6 +326,109 @@ public class K2530341_BookManagementPane extends VBox {
                 showAlert("Success", "Book deleted successfully!");
             }
         });
+    }
+    
+    private void markBookAsFeatured() {
+        K2530341_Book selected = bookTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert("Warning", "Please select a book to mark as Featured.");
+            return;
+        }
+        
+        // Add "FEATURED" to tags using Decorator Pattern
+        String currentTags = selected.getOptionalTags();
+        if (currentTags.contains("FEATURED")) {
+            showAlert("Already Featured", "This book is already marked as Featured!");
+            return;
+        }
+        
+        String newTags = currentTags.isEmpty() ? "FEATURED" : currentTags + ", FEATURED";
+        selected.setOptionalTags(newTags);
+        libraryService.updateBook(selected);
+        refreshTable();
+        
+        // Show decorator pattern demonstration
+        K2530341_BookComponent component = new K2530341_ConcreteBook(selected);
+        K2530341_BookComponent decorated = new K2530341_FeaturedDecorator(component);
+        
+        showAlert("Success - Decorator Pattern Applied", 
+            "Book marked as Featured!\n\n" +
+            "Decorator Pattern Demonstration:\n" +
+            "Original: " + component.getDescription() + "\n" +
+            "Decorated: " + decorated.getDescription() + "\n" +
+            "Priority: " + component.getPriority() + " → " + decorated.getPriority());
+    }
+    
+    private void markBookAsRecommended() {
+        K2530341_Book selected = bookTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert("Warning", "Please select a book to mark as Recommended.");
+            return;
+        }
+        
+        // Add "RECOMMENDED" to tags using Decorator Pattern
+        String currentTags = selected.getOptionalTags();
+        if (currentTags.contains("RECOMMENDED")) {
+            showAlert("Already Recommended", "This book is already marked as Recommended!");
+            return;
+        }
+        
+        String newTags = currentTags.isEmpty() ? "RECOMMENDED" : currentTags + ", RECOMMENDED";
+        selected.setOptionalTags(newTags);
+        libraryService.updateBook(selected);
+        refreshTable();
+        
+        // Show decorator pattern demonstration
+        K2530341_BookComponent component = new K2530341_ConcreteBook(selected);
+        K2530341_BookComponent decorated = new K2530341_RecommendedDecorator(component);
+        
+        showAlert("Success - Decorator Pattern Applied", 
+            "Book marked as Recommended!\n\n" +
+            "Decorator Pattern Demonstration:\n" +
+            "Original: " + component.getDescription() + "\n" +
+            "Decorated: " + decorated.getDescription() + "\n" +
+            "Priority: " + component.getPriority() + " → " + decorated.getPriority());
+    }
+    
+    private void viewBookDecorations() {
+        K2530341_Book selected = bookTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert("Warning", "Please select a book to view decorations.");
+            return;
+        }
+        
+        // Create component and apply all decorations found in tags
+        K2530341_BookComponent component = new K2530341_ConcreteBook(selected);
+        String tags = selected.getOptionalTags();
+        
+        K2530341_BookComponent decorated = component;
+        boolean hasFeatured = tags.contains("FEATURED");
+        boolean hasRecommended = tags.contains("RECOMMENDED");
+        
+        if (hasFeatured) {
+            decorated = new K2530341_FeaturedDecorator(decorated);
+        }
+        if (hasRecommended) {
+            decorated = new K2530341_RecommendedDecorator(decorated);
+        }
+        
+        String message = "Book: " + selected.getTitle() + "\n\n";
+        message += "Current Decorations:\n";
+        if (hasFeatured) message += "⭐ Featured (+10 priority)\n";
+        if (hasRecommended) message += "👍 Recommended (+5 priority)\n";
+        if (!hasFeatured && !hasRecommended) message += "No decorations applied\n";
+        
+        message += "\nDecorator Pattern Chain:\n";
+        message += "Base: " + component.getDescription() + " (Priority: " + component.getPriority() + ")\n";
+        if (hasFeatured || hasRecommended) {
+            message += "Final: " + decorated.getDescription() + " (Priority: " + decorated.getPriority() + ")\n";
+        }
+        
+        message += "\nOptional Metadata (Builder Pattern):\n";
+        message += "Tags: " + (selected.getOptionalTags().isEmpty() ? "None" : selected.getOptionalTags()) + "\n";
+        message += "Edition: " + (selected.getEdition().isEmpty() ? "None" : selected.getEdition());
+        
+        showAlert("Book Decorations & Metadata", message);
     }
     
     private void showAlert(String title, String message) {

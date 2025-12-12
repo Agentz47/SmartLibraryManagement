@@ -19,6 +19,7 @@ public class K2530341_CancelReservationCommand implements K2530341_Command {
     @Override
     public boolean execute() {
         executed = libraryService.cancelReservation(reservationId);
+        System.out.println("[CancelReservationCommand] Reservation ID: " + reservationId + ". Result: " + (executed ? "SUCCESS (Cancelled)" : "FAILED"));
         return executed;
     }
     

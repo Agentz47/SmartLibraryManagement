@@ -106,7 +106,50 @@ public class K2530341_SearchBooksPane extends VBox {
         TableColumn<K2530341_Book, String> statusCol = new TableColumn<>("Status");
         statusCol.setCellValueFactory(new PropertyValueFactory<>("availabilityStatus"));
         
-        bookTable.getColumns().addAll(titleCol, authorCol, categoryCol, statusCol);
+        // Decorator Pattern: Show if book is Featured/Recommended
+        TableColumn<K2530341_Book, String> decorationsCol = new TableColumn<>("Decorations");
+        decorationsCol.setCellValueFactory(cellData -> {
+            String tags = cellData.getValue().getOptionalTags();
+            StringBuilder decorations = new StringBuilder();
+            if (tags != null) {
+                if (tags.contains("FEATURED")) decorations.append("⭐ Featured ");
+                if (tags.contains("RECOMMENDED")) decorations.append("👍 Recommended");
+            }
+            return new javafx.beans.property.SimpleStringProperty(
+                decorations.length() > 0 ? decorations.toString().trim() : "-"
+            );
+        });
+        decorationsCol.setPrefWidth(150);
+        
+        // Builder Pattern: Show optional metadata
+        TableColumn<K2530341_Book, String> tagsCol = new TableColumn<>("Tags");
+        tagsCol.setCellValueFactory(cellData -> {
+            String tags = cellData.getValue().getOptionalTags();
+            // Remove FEATURED/RECOMMENDED from display (shown in Decorations column)
+            if (tags != null) {
+                String displayTags = tags.replaceAll("FEATURED,?", "")
+                                        .replaceAll("RECOMMENDED,?", "")
+                                        .replaceAll("^,+|,+$", "")
+                                        .replaceAll(",+", ",")
+                                        .trim();
+                return new javafx.beans.property.SimpleStringProperty(
+                    !displayTags.isEmpty() ? displayTags : "-"
+                );
+            }
+            return new javafx.beans.property.SimpleStringProperty("-");
+        });
+        tagsCol.setPrefWidth(120);
+        
+        TableColumn<K2530341_Book, String> editionCol = new TableColumn<>("Edition");
+        editionCol.setCellValueFactory(cellData -> {
+            String edition = cellData.getValue().getEdition();
+            return new javafx.beans.property.SimpleStringProperty(
+                edition != null && !edition.isEmpty() ? edition : "-"
+            );
+        });
+        editionCol.setPrefWidth(100);
+        
+        bookTable.getColumns().addAll(titleCol, authorCol, categoryCol, statusCol, decorationsCol, tagsCol, editionCol);
     }
     
     private void performSearch() {

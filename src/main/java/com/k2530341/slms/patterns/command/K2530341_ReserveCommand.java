@@ -23,12 +23,14 @@ public class K2530341_ReserveCommand implements K2530341_Command {
     public boolean execute() {
         reservationId = libraryService.reserveBook(bookId, userId);
         executed = (reservationId != null && reservationId.startsWith("RES-"));
+        System.out.println("[ReserveCommand] User: " + userId + " reserved Book: " + bookId + ". Result: " + (executed ? ("SUCCESS (Reservation ID: " + reservationId + ")") : ("FAILED (" + reservationId + ")")));
         return executed;
     }
     
     public String executeWithResult() {
         reservationId = libraryService.reserveBook(bookId, userId);
         executed = (reservationId != null && reservationId.startsWith("RES-"));
+        System.out.println("[ReserveCommand] User: " + userId + " reserved Book: " + bookId + ". Result: " + (executed ? ("SUCCESS (Reservation ID: " + reservationId + ")") : ("FAILED (" + reservationId + ")")));
         return reservationId;
     }
     

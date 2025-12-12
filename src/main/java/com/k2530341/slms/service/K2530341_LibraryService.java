@@ -304,8 +304,8 @@ public class K2530341_LibraryService {
                     LocalDateTime expiryTime = userReservation.getNotifiedAt().plusHours(48);
                     if (LocalDateTime.now().isBefore(expiryTime)) {
                         canBorrow = true;
-                        // Mark reservation as fulfilled by changing status
-                        userReservation.setStatus(K2530341_ReservationStatus.CANCELLED);
+                        // Mark reservation as fulfilled when user borrows the book
+                        userReservation.setStatus(K2530341_ReservationStatus.FULFILLED);
                     } else {
                         // Reservation expired, release the book
                         userReservation.setStatus(K2530341_ReservationStatus.EXPIRED);

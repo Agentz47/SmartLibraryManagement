@@ -7,6 +7,7 @@ package com.k2530341.slms.model.reservation;
 public enum K2530341_ReservationStatus {
     PENDING,
     NOTIFIED,
+    FULFILLED,
     CANCELLED,
     EXPIRED
 }

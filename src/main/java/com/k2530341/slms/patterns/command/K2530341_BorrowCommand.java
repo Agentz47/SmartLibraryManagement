@@ -24,6 +24,7 @@ public class K2530341_BorrowCommand implements K2530341_Command {
         borrowId = libraryService.borrowBook(bookId, userId);
         // Success only if we get a valid borrow ID (not null and not an error code)
         executed = (borrowId != null && !borrowId.equals("LIMIT_EXCEEDED") && !borrowId.equals("FINE_LIMIT_EXCEEDED"));
+        System.out.println("[BorrowCommand] User: " + userId + " borrowed Book: " + bookId + ". Result: " + (executed ? ("SUCCESS (Borrow ID: " + borrowId + ")") : ("FAILED (" + borrowId + ")")));
         return executed;
     }
     
